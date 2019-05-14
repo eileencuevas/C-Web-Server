@@ -99,12 +99,17 @@ void get_d20(int fd)
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
+    srand(time(NULL));
+    int num = rand() % 20 + 1; // random int between 1 and 20
+    char result[sizeof num];
+    sprintf(result, "%d\n", num);
 
     // Use send_response() to send it back as text/plain data
 
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
+    send_response(fd, "HTTP/1.1 200 OK", "text/plain", result, strlen(result));
 }
 
 /**
@@ -181,6 +186,12 @@ void handle_http_request(int fd, struct cache *cache)
     char req_path[8192];
     // Read the first two components of the first line of the request
     sscanf(request, "%s %s", req_type, req_path);
+    // printf("type: %s || path: %s\n", req_type, req_path);
+
+    if (strcmp(req_path, "/") == 0) // send a response for root
+    {
+        resp_404(fd);
+    }
     // If GET, handle the get endpoints
     if (strcmp(req_type, "GET") == 0)
     {
