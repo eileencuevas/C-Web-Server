@@ -70,13 +70,13 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
                                   "Connection: close\n"
                                   "Content-Length: %d\n"
                                   "Content-Type: %s\n"
-                                  "\n"
-                                  "%s\n",
+                                  "\n",
                                   header,
                                   asctime(info),
                                   content_length,
-                                  content_type,
-                                  (char *)body);
+                                  content_type);
+    memcpy(response + response_length, body, content_length);
+    response_length += content_length;
 
     // Send it all!
     int rv = send(fd, response, response_length, 0);
@@ -174,21 +174,31 @@ void handle_http_request(int fd, struct cache *cache)
         return;
     }
 
-    /////////////////////////////
-    // TESTING SEND_RESPONSE() //
-    /////////////////////////////
-    resp_404(fd);
-
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
-
+    char req_type[8];
+    char req_path[8192];
     // Read the first two components of the first line of the request
-
+    sscanf(request, "%s %s", req_type, req_path);
     // If GET, handle the get endpoints
-
-    //    Check if it's /d20 and handle that special case
-    //    Otherwise serve the requested file by calling get_file()
+    if (strcmp(req_type, "GET") == 0)
+    {
+        //    Check if it's /d20 and handle that special case
+        if (strcmp(req_path, "/d20") == 0)
+        {
+            get_d20(fd);
+        }
+        else
+        {
+            //    Otherwise serve the requested file by calling get_file()
+            get_file(fd, cache, req_path);
+        }
+    }
+    else
+    { // request type not GET
+        resp_404(fd);
+    }
 
     // (Stretch) If POST, handle the post request
 }
