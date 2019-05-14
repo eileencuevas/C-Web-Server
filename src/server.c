@@ -147,6 +147,26 @@ void get_file(int fd, struct cache *cache, char *request_path)
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
+    char filepath[4096];
+    struct file_data *filedata;
+    char *mime_type;
+
+    // Fetch the  file
+    snprintf(filepath, sizeof filepath, "%s%s", SERVER_ROOT, request_path);
+    filedata = file_load(filepath);
+
+    if (filedata == NULL)
+    {
+        resp_404(fd);
+    }
+    else
+    {
+        mime_type = mime_type_get(filepath);
+
+        send_response(fd, "HTTP/1.1 200 OK", mime_type, filedata->data, filedata->size);
+
+        file_free(filedata);
+    }
 }
 
 /**
@@ -188,10 +208,6 @@ void handle_http_request(int fd, struct cache *cache)
     sscanf(request, "%s %s", req_type, req_path);
     // printf("type: %s || path: %s\n", req_type, req_path);
 
-    if (strcmp(req_path, "/") == 0) // send a response for root
-    {
-        resp_404(fd);
-    }
     // If GET, handle the get endpoints
     if (strcmp(req_type, "GET") == 0)
     {
@@ -199,6 +215,10 @@ void handle_http_request(int fd, struct cache *cache)
         if (strcmp(req_path, "/d20") == 0)
         {
             get_d20(fd);
+        }
+        else if (strcmp(req_path, "/") == 0) // send a response for root
+        {
+            resp_404(fd);
         }
         else
         {
