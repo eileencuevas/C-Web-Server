@@ -119,6 +119,8 @@ struct cache *cache_create(int max_size, int hashsize)
     new_cache->index = hashtable_create(hashsize, NULL);
     new_cache->max_size = max_size;
     new_cache->cur_size = 0;
+
+    return new_cache;
 }
 
 void cache_free(struct cache *cache)
