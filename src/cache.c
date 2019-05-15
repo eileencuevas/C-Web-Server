@@ -20,6 +20,8 @@ struct cache_entry *alloc_entry(char *path, char *content_type, void *content, i
     // doubly-linked list things
     new_entry->prev = NULL;
     new_entry->next = NULL;
+
+    return new_entry;
 }
 
 /**
@@ -109,6 +111,14 @@ struct cache *cache_create(int max_size, int hashsize)
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
+    struct cache *new_cache = calloc(max_size, sizeof(struct cache));
+    //  doubly-linked list stuff
+    new_cache->head = NULL;
+    new_cache->tail = NULL;
+
+    new_cache->index = hashtable_create(hashsize, NULL);
+    new_cache->max_size = max_size;
+    new_cache->cur_size = 0;
 }
 
 void cache_free(struct cache *cache)
