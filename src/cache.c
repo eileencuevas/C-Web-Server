@@ -13,10 +13,11 @@ struct cache_entry *alloc_entry(char *path, char *content_type, void *content, i
     // IMPLEMENT ME! //
     ///////////////////
     struct cache_entry *new_entry = malloc(sizeof(struct cache_entry));
-    new_entry->path = path;
-    new_entry->content_type = content_type;
+    new_entry->path = strdup(path);
+    new_entry->content_type = strdup(content_type);
     new_entry->content_length = content_length;
-    new_entry->content = content;
+    new_entry->content = malloc(content_length);
+    memcpy(new_entry->content, content, content_length);
     // doubly-linked list things
     new_entry->prev = NULL;
     new_entry->next = NULL;
@@ -32,7 +33,9 @@ void free_entry(struct cache_entry *entry)
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
-    // Should anything else be freed?
+    free(entry->path);
+    free(entry->content_type);
+    free(entry->content);
     free(entry);
 }
 
@@ -111,7 +114,7 @@ struct cache *cache_create(int max_size, int hashsize)
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
-    struct cache *new_cache = calloc(max_size, sizeof(struct cache));
+    struct cache *new_cache = malloc(sizeof(struct cache));
     //  doubly-linked list stuff
     new_cache->head = NULL;
     new_cache->tail = NULL;
@@ -183,4 +186,16 @@ struct cache_entry *cache_get(struct cache *cache, char *path)
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
+
+    // Attempt to find the cache entry pointer by path in the hash table.
+    struct cache_entry *found_entry = hashtable_get(cache->index, path);
+    // If not found, return NULL.
+    if (found_entry == NULL)
+    {
+        return NULL;
+    }
+    // Move the cache entry to the head of the doubly-linked list.
+    dllist_move_to_head(cache, found_entry);
+    // Return the cache entry pointer.
+    return found_entry;
 }
