@@ -142,7 +142,7 @@ void resp_404(int fd)
 /**
  * Read and return a file from disk or cache
  */
-void get_file(int fd, struct cache *cache, char *request_path)
+void get_file(int fd, struct cache *cache, char *request_path) // <--------
 {
     ///////////////////
     // IMPLEMENT ME! //
@@ -150,21 +150,28 @@ void get_file(int fd, struct cache *cache, char *request_path)
     char filepath[4096];
     struct file_data *filedata;
     char *mime_type;
-
+    // Check to see if the file ins in the cache
+    struct cache_entry *entry = cache_get(cache, request_path);
     // Fetch the  file
     snprintf(filepath, sizeof filepath, "%s%s", SERVER_ROOT, request_path);
     filedata = file_load(filepath);
+    if (entry != NULL)
+    {
+        // if there, serve it back
+        send_response(fd, "HTTP/1.1 200 OK", entry->content_type, entry->content, entry->content_length);
+        return;
+    }
+    // else, do the things below and store it
 
-    if (filedata == NULL)
+    else if (filedata == NULL)
     {
         resp_404(fd);
     }
     else
     {
         mime_type = mime_type_get(filepath);
-
         send_response(fd, "HTTP/1.1 200 OK", mime_type, filedata->data, filedata->size);
-
+        cache_put(cache, request_path, mime_type, filedata->data, filedata->size);
         file_free(filedata);
     }
 }
@@ -185,7 +192,7 @@ char *find_start_of_body(char *header)
 /**
  * Handle HTTP request and send response
  */
-void handle_http_request(int fd, struct cache *cache)
+void handle_http_request(int fd, struct cache *cache) // <-------
 {
     const int request_buffer_size = 65536; // 64K
     char request[request_buffer_size];
